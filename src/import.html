@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MIDIノート JSON インポート</title>
+  <script>
+    const isWebView2 = window.chrome && window.chrome.webview;
+    const isWebKit = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.live;
+
+    function sendMessage(message) {
+      if (isWebView2) window.chrome.webview.postMessage(message);
+      else if (isWebKit) window.webkit.messageHandlers.live.postMessage(message);
+    }
+
+    function applyAndClose() {
+      const text = document.getElementById('input').value;
+      sendMessage({ method: "close_and_send", params: [text] });
+    }
+
+    function cancel() {
+      sendMessage({ method: "close_and_send", params: [""] });
+    }
+
+    function pasteFromClipboard() {
+      const textarea = document.getElementById('input');
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        navigator.clipboard.readText().then((text) => {
+          textarea.value = text;
+          textarea.focus();
+        }).catch(() => {
+          textarea.focus();
+        });
+      } else {
+        textarea.focus();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('input').focus();
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') cancel();
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) applyAndClose();
+      });
+    });
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+    input, button, textarea { font: inherit; }
+
+    :root {
+      --bg: hsl(0, 0%, 21%);
+      --bg-control: hsl(0, 0%, 16%);
+      --bg-input: hsl(0, 0%, 12%);
+      --text: hsl(0, 0%, 71%);
+      --text-dim: hsl(0, 0%, 41%);
+      --border: hsl(0, 0%, 7%);
+      --accent: hsl(31, 100%, 67%);
+    }
+
+    html {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "AbletonSansSmall", monospace;
+      font-size: 11.5px;
+      font-weight: 500;
+      -webkit-font-smoothing: antialiased;
+      height: 100%;
+    }
+
+    body {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      gap: 8px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .hint {
+      font-size: 10.5px;
+      color: var(--text-dim);
+    }
+
+    textarea#input {
+      flex: 1;
+      resize: none;
+      background: var(--bg-input);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      outline: none;
+      tab-size: 4;
+    }
+
+    textarea#input:focus {
+      outline: 2px solid var(--text-dim);
+      outline-offset: 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    button {
+      font-size: 11px;
+      line-height: 1;
+      background: var(--bg-control);
+      color: var(--text);
+      border: 1px solid var(--border);
+      height: 22px;
+      padding: 0 12px;
+      border-radius: 11px;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      transition: background 0.1s;
+    }
+
+    button:hover { background: hsl(0, 0%, 19%); }
+    button.primary { color: hsl(0, 0%, 7%); background: var(--accent); }
+    button.primary:hover { background: var(--accent); opacity: 0.9; }
+    button:focus { outline: 2px solid var(--text-dim); }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <span class="title">MIDIノートをJSONからインポート</span>
+    <span class="hint">[{"pitch":60,"startTime":0,"duration":1}, ...] または {"notes":[...]}</span>
+  </div>
+  <textarea id="input" spellcheck="false" placeholder='[
+  { "pitch": 60, "startTime": 0, "duration": 1, "velocity": 100 },
+  { "pitch": 64, "startTime": 1, "duration": 1 }
+]'></textarea>
+  <div class="actions">
+    <button onclick="pasteFromClipboard()">クリップボードから貼り付け</button>
+    <button onclick="cancel()">キャンセル</button>
+    <button class="primary" onclick="applyAndClose()">適用してクリップに反映</button>
+  </div>
+</body>
+
+</html>
