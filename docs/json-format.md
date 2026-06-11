@@ -12,22 +12,26 @@ There are two formats:
 
 ## Note object
 
-Both formats are built from note objects with this shape:
+Both formats are built from note objects with this shape. Field names
+are intentionally short, since a clip can contain many notes:
 
 ```json
-{ "pitch": 60, "startTime": 0, "duration": 1, "velocity": 100, "muted": false }
+{ "p": 60, "s": 0, "d": 1, "v": 100, "m": false }
 ```
 
-| Field       | Type    | Required | Description |
-|-------------|---------|----------|-------------|
-| `pitch`     | number  | yes      | MIDI note number, 0–127 (60 = C3). |
-| `startTime` | number  | yes      | Start position from the clip's beginning, in beats. |
-| `duration`  | number  | yes      | Note length, in beats. |
-| `velocity`  | number  | no       | Note velocity, 1–127. Omitted ≈ Live's default (~100). |
-| `muted`     | boolean | no       | Whether the note is muted. Omitted = `false`. |
+| Field | Full name   | Type    | Required | Description |
+|-------|-------------|---------|----------|-------------|
+| `p`   | pitch       | number  | yes      | MIDI note number, 0–127 (60 = C3). |
+| `s`   | startTime   | number  | yes      | Start position from the clip's beginning, in beats. |
+| `d`   | duration    | number  | yes      | Note length, in beats. |
+| `v`   | velocity    | number  | no       | Note velocity, 1–127. Omitted = `100`. |
+| `m`   | muted       | boolean | no       | Whether the note is muted. Omitted = `false`. |
 
 Beats, not seconds: a quarter note at 4/4 is `1` beat; a bar is `4`
 beats.
+
+Minimal note (defaults applied): `{ "p": 60, "s": 0, "d": 1 }` is
+equivalent to `{ "p": 60, "s": 0, "d": 1, "v": 100, "m": false }`.
 
 ## Format 1: Note array (single clip)
 
@@ -36,9 +40,9 @@ right-click menu.
 
 ```json
 [
-  { "pitch": 60, "startTime": 0, "duration": 1, "velocity": 100 },
-  { "pitch": 64, "startTime": 1, "duration": 1 },
-  { "pitch": 67, "startTime": 2, "duration": 2, "muted": false }
+  { "p": 60, "s": 0, "d": 1, "v": 100 },
+  { "p": 64, "s": 1, "d": 1 },
+  { "p": 67, "s": 2, "d": 2, "m": false }
 ]
 ```
 
@@ -59,16 +63,16 @@ JSON"** on a MIDI track's right-click menu.
       "slotIndex": 0,
       "name": "Verse",
       "notes": [
-        { "pitch": 60, "startTime": 0, "duration": 1, "velocity": 100 },
-        { "pitch": 64, "startTime": 1, "duration": 1 }
+        { "p": 60, "s": 0, "d": 1, "v": 100 },
+        { "p": 64, "s": 1, "d": 1 }
       ]
     },
     {
       "slotIndex": 1,
       "name": "Chorus",
       "notes": [
-        { "pitch": 64, "startTime": 0, "duration": 2 },
-        { "pitch": 67, "startTime": 2, "duration": 2 }
+        { "p": 64, "s": 0, "d": 2 },
+        { "p": 67, "s": 2, "d": 2 }
       ]
     }
   ]
@@ -103,6 +107,8 @@ JSON"** on a MIDI track's right-click menu.
   clips are included in `clips`.
 - `slotIndex` reflects the clip's actual position, so re-importing the
   exported JSON unchanged is a no-op.
+- Notes are exported with `v`/`m` omitted when they equal the
+  defaults (`v: 100`, `m: false`), to keep the JSON compact.
 
 ## Examples for chat-based generation
 
@@ -110,10 +116,10 @@ A simple C major triad arpeggio, one bar:
 
 ```json
 [
-  { "pitch": 60, "startTime": 0,   "duration": 0.5, "velocity": 100 },
-  { "pitch": 64, "startTime": 0.5, "duration": 0.5, "velocity": 100 },
-  { "pitch": 67, "startTime": 1,   "duration": 0.5, "velocity": 100 },
-  { "pitch": 72, "startTime": 1.5, "duration": 0.5, "velocity": 100 }
+  { "p": 60, "s": 0,   "d": 0.5 },
+  { "p": 64, "s": 0.5, "d": 0.5 },
+  { "p": 67, "s": 1,   "d": 0.5 },
+  { "p": 72, "s": 1.5, "d": 0.5 }
 ]
 ```
 
@@ -126,20 +132,20 @@ A two-clip chord progression for a "Chord" track (slots 0 and 1):
       "slotIndex": 0,
       "name": "Cmaj7",
       "notes": [
-        { "pitch": 60, "startTime": 0, "duration": 4 },
-        { "pitch": 64, "startTime": 0, "duration": 4 },
-        { "pitch": 67, "startTime": 0, "duration": 4 },
-        { "pitch": 71, "startTime": 0, "duration": 4 }
+        { "p": 60, "s": 0, "d": 4 },
+        { "p": 64, "s": 0, "d": 4 },
+        { "p": 67, "s": 0, "d": 4 },
+        { "p": 71, "s": 0, "d": 4 }
       ]
     },
     {
       "slotIndex": 1,
       "name": "Am7",
       "notes": [
-        { "pitch": 57, "startTime": 0, "duration": 4 },
-        { "pitch": 60, "startTime": 0, "duration": 4 },
-        { "pitch": 64, "startTime": 0, "duration": 4 },
-        { "pitch": 67, "startTime": 0, "duration": 4 }
+        { "p": 57, "s": 0, "d": 4 },
+        { "p": 60, "s": 0, "d": 4 },
+        { "p": 64, "s": 0, "d": 4 },
+        { "p": 67, "s": 0, "d": 4 }
       ]
     }
   ]

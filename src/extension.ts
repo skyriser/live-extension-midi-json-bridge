@@ -11,48 +11,49 @@ import importHtml from "./import.html";
 
 // ─── JSON shape ────────────────────────────────────────────────────────────
 
+const DEFAULT_VELOCITY = 100;
+
 interface NoteJson {
-  pitch: number;
-  startTime: number;
-  duration: number;
-  velocity?: number;
-  muted?: boolean;
+  p: number; // pitch
+  s: number; // startTime
+  d: number; // duration
+  v?: number; // velocity, defaults to DEFAULT_VELOCITY
+  m?: boolean; // muted, defaults to false
 }
 
 function toJson(notes: NoteDescription[]): NoteJson[] {
   return notes.map((n) => {
     const note: NoteJson = {
-      pitch: n.pitch,
-      startTime: n.startTime,
-      duration: n.duration,
+      p: n.pitch,
+      s: n.startTime,
+      d: n.duration,
     };
-    if (n.velocity !== undefined) note.velocity = n.velocity;
-    if (n.muted) note.muted = n.muted;
+    if (n.velocity !== undefined && n.velocity !== DEFAULT_VELOCITY) {
+      note.v = n.velocity;
+    }
+    if (n.muted) note.m = n.muted;
     return note;
   });
 }
 
 function fromJson(notes: NoteJson[]): NoteDescription[] {
-  return notes.map((n) => {
-    const note: NoteDescription = {
-      pitch: n.pitch,
-      startTime: n.startTime,
-      duration: n.duration,
-    };
-    if (n.velocity !== undefined) note.velocity = n.velocity;
-    if (n.muted !== undefined) note.muted = n.muted;
-    return note;
-  });
+  return notes.map((n) => ({
+    pitch: n.p,
+    startTime: n.s,
+    duration: n.d,
+    velocity: n.v ?? DEFAULT_VELOCITY,
+    muted: n.m ?? false,
+  }));
 }
 
 function isNoteJson(value: unknown): value is NoteJson {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
-  if (typeof v.pitch !== "number") return false;
-  if (typeof v.startTime !== "number") return false;
-  if (typeof v.duration !== "number") return false;
-  if (v.velocity !== undefined && typeof v.velocity !== "number") return false;
-  if (v.muted !== undefined && typeof v.muted !== "boolean") return false;
+  if (typeof v.p !== "number") return false;
+  if (typeof v.s !== "number") return false;
+  if (typeof v.d !== "number") return false;
+  if (v.v !== undefined && typeof v.v !== "number") return false;
+  if (v.m !== undefined && typeof v.m !== "boolean") return false;
   return true;
 }
 
@@ -68,7 +69,7 @@ function parseNotesJson(text: string): NoteJson[] {
     throw new Error('Expected an array of notes, or { "notes": [...] }');
   }
   if (!arr.every(isNoteJson)) {
-    throw new Error("Each note requires numeric pitch, startTime, and duration");
+    throw new Error("Each note requires numeric p (pitch), s (startTime), and d (duration)");
   }
   return arr;
 }
