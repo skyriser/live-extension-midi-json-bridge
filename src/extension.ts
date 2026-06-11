@@ -1,6 +1,7 @@
 import {
   initialize,
   MidiClip,
+  MidiTrack,
   type ActivationContext,
   type Handle,
   type NoteDescription,
@@ -72,6 +73,40 @@ function parseNotesJson(text: string): NoteJson[] {
   return arr;
 }
 
+// ─── Track-level JSON shape ────────────────────────────────────────────────
+
+interface ClipJson {
+  slotIndex: number;
+  name: string;
+  notes: NoteJson[];
+}
+
+function isClipJson(value: unknown): value is ClipJson {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  if (typeof v.slotIndex !== "number") return false;
+  if (typeof v.name !== "string") return false;
+  if (!Array.isArray(v.notes) || !v.notes.every(isNoteJson)) return false;
+  return true;
+}
+
+function parseClipsJson(text: string): ClipJson[] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("JSONの形式が正しくありません");
+  }
+  const clips = (parsed as { clips?: unknown }).clips;
+  if (!Array.isArray(clips)) {
+    throw new Error('{ "clips": [...] } の形式である必要があります');
+  }
+  if (!clips.every(isClipJson)) {
+    throw new Error("各クリップには slotIndex, name, notes が必要です");
+  }
+  return clips;
+}
+
 // ─── Extension entry ──────────────────────────────────────────────────────
 
 export function activate(activation: ActivationContext) {
@@ -118,6 +153,78 @@ export function activate(activation: ActivationContext) {
       })(args as Handle).catch((e) => console.error(e)),
   );
 
+  // Export: all clips in a MIDI track's session slots -> JSON
+  context.commands.registerCommand(
+    "midi-json-bridge.exportTrack",
+    (args: unknown) =>
+      (async (handle: Handle) => {
+        const track = context.getObjectFromHandle(handle, MidiTrack);
+
+        const clips: ClipJson[] = [];
+        track.clipSlots.forEach((slot, slotIndex) => {
+          const clip = slot.clip;
+          if (clip instanceof MidiClip) {
+            clips.push({
+              slotIndex,
+              name: clip.name,
+              notes: toJson(clip.notes),
+            });
+          }
+        });
+
+        const json = JSON.stringify({ clips }, null, 2);
+        const html = exportHtml.replace(
+          "__ENCODED_DATA__",
+          encodeURIComponent(json),
+        );
+
+        await context.ui.showModalDialog(
+          `data:text/html,${encodeURIComponent(html)}`,
+          560,
+          460,
+        );
+      })(args as Handle).catch((e) => console.error(e)),
+  );
+
+  // Import: paste JSON -> create/overwrite clips in a MIDI track's session slots
+  context.commands.registerCommand(
+    "midi-json-bridge.importTrack",
+    (args: unknown) =>
+      (async (handle: Handle) => {
+        const track = context.getObjectFromHandle(handle, MidiTrack);
+
+        const result = await context.ui.showModalDialog(
+          `data:text/html,${encodeURIComponent(importHtml)}`,
+          560,
+          460,
+        );
+
+        if (!result) return; // cancelled
+
+        const clipsJson = parseClipsJson(result);
+        const slots = track.clipSlots;
+
+        for (const clipJson of clipsJson) {
+          const slot = slots[clipJson.slotIndex];
+          if (!slot) continue;
+
+          const notes = fromJson(clipJson.notes);
+          const maxEnd = notes.reduce(
+            (max, n) => Math.max(max, n.startTime + n.duration),
+            0,
+          );
+          const length = Math.max(4, Math.ceil(maxEnd / 4) * 4);
+
+          const existing = slot.clip;
+          const clip = existing instanceof MidiClip
+            ? existing
+            : await slot.createMidiClip(length);
+          clip.name = clipJson.name;
+          clip.notes = notes;
+        }
+      })(args as Handle).catch((e) => console.error(e)),
+  );
+
   context.ui.registerContextMenuAction(
     "MidiClip",
     "JSONとしてエクスポート",
@@ -127,6 +234,16 @@ export function activate(activation: ActivationContext) {
     "MidiClip",
     "JSONからインポート",
     "midi-json-bridge.import",
+  );
+  context.ui.registerContextMenuAction(
+    "MidiTrack",
+    "トラック内クリップをJSONエクスポート",
+    "midi-json-bridge.exportTrack",
+  );
+  context.ui.registerContextMenuAction(
+    "MidiTrack",
+    "トラック内クリップにJSONをインポート",
+    "midi-json-bridge.importTrack",
   );
 
   console.log("MIDI JSON Bridge: loaded");
