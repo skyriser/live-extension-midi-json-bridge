@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MIDIノート JSON インポート</title>
+  <title>Import MIDI Notes JSON</title>
   <script>
     const isWebView2 = window.chrome && window.chrome.webview;
     const isWebKit = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.live;
@@ -144,17 +144,17 @@
 
 <body>
   <div class="header">
-    <span class="title">MIDIノートをJSONからインポート</span>
-    <span class="hint">クリップ: [{"pitch":...}, ...] / トラック: {"clips":[{"slotIndex":0,"name":"...","notes":[...]}]}</span>
+    <span class="title">Import MIDI Notes from JSON</span>
+    <span class="hint">Clip: [{"pitch":...}, ...] / Track: {"clips":[{"slotIndex":0,"name":"...","notes":[...]}]}</span>
   </div>
   <textarea id="input" spellcheck="false" placeholder='[
   { "pitch": 60, "startTime": 0, "duration": 1, "velocity": 100 },
   { "pitch": 64, "startTime": 1, "duration": 1 }
 ]'></textarea>
   <div class="actions">
-    <button onclick="pasteFromClipboard()">クリップボードから貼り付け</button>
-    <button onclick="cancel()">キャンセル</button>
-    <button class="primary" onclick="applyAndClose()">適用してクリップに反映</button>
+    <button onclick="pasteFromClipboard()">Paste from Clipboard</button>
+    <button onclick="cancel()">Cancel</button>
+    <button class="primary" onclick="applyAndClose()">Apply to Clip</button>
   </div>
 </body>
 

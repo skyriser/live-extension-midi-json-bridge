@@ -61,14 +61,14 @@ function parseNotesJson(text: string): NoteJson[] {
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new Error("JSONの形式が正しくありません");
+    throw new Error("Invalid JSON");
   }
   const arr = Array.isArray(parsed) ? parsed : (parsed as { notes?: unknown }).notes;
   if (!Array.isArray(arr)) {
-    throw new Error("ノートの配列、または { notes: [...] } の形式である必要があります");
+    throw new Error('Expected an array of notes, or { "notes": [...] }');
   }
   if (!arr.every(isNoteJson)) {
-    throw new Error("各ノートには pitch, startTime, duration (数値) が必要です");
+    throw new Error("Each note requires numeric pitch, startTime, and duration");
   }
   return arr;
 }
@@ -95,14 +95,14 @@ function parseClipsJson(text: string): ClipJson[] {
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new Error("JSONの形式が正しくありません");
+    throw new Error("Invalid JSON");
   }
   const clips = (parsed as { clips?: unknown }).clips;
   if (!Array.isArray(clips)) {
-    throw new Error('{ "clips": [...] } の形式である必要があります');
+    throw new Error('Expected { "clips": [...] }');
   }
   if (!clips.every(isClipJson)) {
-    throw new Error("各クリップには slotIndex, name, notes が必要です");
+    throw new Error("Each clip requires slotIndex, name, and notes");
   }
   return clips;
 }
@@ -227,22 +227,22 @@ export function activate(activation: ActivationContext) {
 
   context.ui.registerContextMenuAction(
     "MidiClip",
-    "JSONとしてエクスポート",
+    "Export as JSON",
     "midi-json-bridge.export",
   );
   context.ui.registerContextMenuAction(
     "MidiClip",
-    "JSONからインポート",
+    "Import from JSON",
     "midi-json-bridge.import",
   );
   context.ui.registerContextMenuAction(
     "MidiTrack",
-    "トラック内クリップをJSONエクスポート",
+    "Export Track Clips as JSON",
     "midi-json-bridge.exportTrack",
   );
   context.ui.registerContextMenuAction(
     "MidiTrack",
-    "トラック内クリップにJSONをインポート",
+    "Import Track Clips from JSON",
     "midi-json-bridge.importTrack",
   );
 

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MIDIノート JSON</title>
+  <title>MIDI Notes JSON</title>
   <script>
     const noteData = decodeURIComponent("__ENCODED_DATA__");
 
@@ -26,17 +26,17 @@
       const btn = document.getElementById('copyBtn');
 
       const succeed = () => {
-        btn.textContent = 'コピー完了!';
+        btn.textContent = 'Copied!';
         btn.classList.add('success');
         setTimeout(() => {
-          btn.textContent = 'クリップボードにコピー';
+          btn.textContent = 'Copy to Clipboard';
           btn.classList.remove('success');
         }, 2000);
       };
 
       const fail = () => {
-        btn.textContent = 'Ctrl+C でコピー';
-        setTimeout(() => { btn.textContent = 'クリップボードにコピー'; }, 3000);
+        btn.textContent = 'Press Ctrl+C to copy';
+        setTimeout(() => { btn.textContent = 'Copy to Clipboard'; }, 3000);
       };
 
       if (navigator.clipboard) {
@@ -151,12 +151,12 @@
 
 <body>
   <div class="header">
-    <span class="title">MIDIノート (JSON)</span>
+    <span class="title">MIDI Notes (JSON)</span>
   </div>
   <textarea id="output" readonly spellcheck="false"></textarea>
   <div class="actions">
-    <button id="copyBtn" onclick="copyToClipboard()">クリップボードにコピー</button>
-    <button onclick="closeDialog()">閉じる</button>
+    <button id="copyBtn" onclick="copyToClipboard()">Copy to Clipboard</button>
+    <button onclick="closeDialog()">Close</button>
   </div>
 </body>
 
